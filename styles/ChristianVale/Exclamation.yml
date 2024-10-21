@@ -1,0 +1,8 @@
+extends: existence
+message: "Avoid exclamation points!"
+level: warning
+scope: text
+ignorecase: false
+nonword: true
+tokens:
+  - "!"
