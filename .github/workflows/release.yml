@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*.*.*'
   workflow_dispatch:
+    inputs:
+      version:
+        description: "The release version number (for example, v1.2.3)."
+        required: true
 
 permissions:
   contents: write
