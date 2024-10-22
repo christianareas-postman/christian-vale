@@ -1,0 +1,45 @@
+name: Zip and release the christian-vale Vale package
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Check out the repository.
+        uses: actions/checkout@v4
+
+      - name: 2. Prepare the package.
+        run: |
+          mkdir -p release/christian-vale
+          cp -R styles release/christian-vale/
+
+      - name: 3. Zip the package.
+        working-directory: release
+        run: zip -r christian-vale.zip christian-vale
+
+      - name: 4. Upload the package.
+        uses: actions/upload-artifact@v4
+        with:
+          name: christian-vale
+          path: release/christian-vale.zip
+
+      - name: 5. Release the package.
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: release/christian-vale.zip
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 6. Clean up the release directory.
+        run: rm -rf release
