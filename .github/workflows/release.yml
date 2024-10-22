@@ -36,11 +36,23 @@ jobs:
           name: christian-vale
           path: release/christian-vale.zip
 
-      - name: 5. Release the package.
-        id: create_release
+      - name: 5. Set the release version.
+        id: set_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "TAG_NAME=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            echo "TAG_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
+          else
+            echo "Error: Event type not supported."
+            exit 1
+          fi
+
+      - name: 6. Release the package.
+        id: release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ env.TAG_NAME }}
           files: release/christian-vale.zip
           generate_release_notes: true
           draft: false
