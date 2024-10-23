@@ -1,19 +1,15 @@
-# To release:
-# git tag -a v1.0.0 -m "Version 1.0.0"
-# git push origin v1.0.0
-
 name: Zip and release the Vale package.
 
 on:
-  push:
+  pull_request:
     branches:
       - main
-    tags:
-      - "v*.*.*"
+    types:
+      - closed
   workflow_dispatch:
     inputs:
       release-version:
-        description: "Release version (for example, v1.2.3)"
+        description: "Release version (for example, 1.0.1)"
         required: true
 
 permissions:
@@ -23,44 +19,58 @@ jobs:
   zip-and-release:
     runs-on: ubuntu-latest
 
-    steps:
-      - name: 1. Check out the repository.
-        uses: actions/checkout@v4
+    if: |
+      '
+        (
+          github.event.pull_request.base.ref == "main" &&
+          github.event_name == "pull_request" &&
+          github.event.pull_request.merged == true
+        ) ||
+        github.event_name == "workflow_dispatch"
+      '
 
-      - name: 2. Prepare the package.
+    steps:
+      - name: 1. Check out the main branch.
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: 2. Set the release version.
+        id: set-release-version
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]
+          then
+            RELEASE_VERSION=$(cat VERSION)
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]
+          then
+            RELEASE_VERSION=${{ github.event.inputs.release-version }}
+          else
+            echo "Error: The workflow doesn’t support your event type."
+            exit 1
+          fi
+          echo "release-version=${RELEASE_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: 3. Prepare the package.
         run: |
           mkdir -p release/christian-vale
           cp -R styles release/christian-vale/
 
-      - name: 3. Zip the package.
+      - name: 4. Zip the package.
         working-directory: release
         run: zip -r christian-vale.zip christian-vale
 
-      - name: 4. Upload the package.
+      - name: 5. Upload the package.
         uses: actions/upload-artifact@v4
         with:
           name: christian-vale
           path: release/christian-vale.zip
 
-      - name: 5. Set the release version.
-        id: set-version
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]
-          then
-            echo "tag_name=${{ github.event.inputs.release-version }}" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event_name }}" = "push" ]
-          then
-            echo "tag_name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-          else
-            echo "Error: Event type not supported."
-            exit 1
-          fi
-
       - name: 6. Release the package.
         id: release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.set-version.outputs.tag_name }}
+          tag_name: v${{ steps.set-release-version.outputs.release-version }}
           files: release/christian-vale.zip
           generate_release_notes: true
           draft: false
@@ -68,5 +78,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 6. Clean up.
+      - name: 7. Clean up.
         run: rm -rf release
