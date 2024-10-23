@@ -1,4 +1,4 @@
-name: Zip and release the Vale package.
+name: Package and release christian-vale
 
 on:
   pull_request:
