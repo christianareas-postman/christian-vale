@@ -2,23 +2,25 @@
 # git tag -a v1.0.0 -m "Version 1.0.0"
 # git push origin v1.0.0
 
-name: Zip and release the christian-vale Vale package
+name: Zip and release the Vale package.
 
 on:
   push:
+    branches:
+      - main
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
   workflow_dispatch:
     inputs:
-      version:
-        description: "The release version number (for example, v1.2.3)."
+      release-version:
+        description: "Release version (for example, v1.2.3)"
         required: true
 
 permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  zip-and-release:
     runs-on: ubuntu-latest
 
     steps:
@@ -41,12 +43,14 @@ jobs:
           path: release/christian-vale.zip
 
       - name: 5. Set the release version.
-        id: set_version
+        id: set-version
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "TAG_NAME=${{ github.event.inputs.version }}" >> $GITHUB_ENV
-          elif [ "${{ github.event_name }}" = "push" ]; then
-            echo "TAG_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]
+          then
+            echo "tag_name=${{ github.event.inputs.release-version }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "push" ]
+          then
+            echo "tag_name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
           else
             echo "Error: Event type not supported."
             exit 1
@@ -56,7 +60,7 @@ jobs:
         id: release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.TAG_NAME }}
+          tag_name: ${{ steps.set-version.outputs.tag_name }}
           files: release/christian-vale.zip
           generate_release_notes: true
           draft: false
@@ -64,5 +68,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 6. Clean up the release directory.
+      - name: 6. Clean up.
         run: rm -rf release
