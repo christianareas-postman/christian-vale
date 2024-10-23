@@ -1,3 +1,3 @@
 # Christian Vale
 
-Hello, beautiful world!
+Hello, beautiful world.
