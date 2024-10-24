@@ -7,10 +7,6 @@ on:
     types:
       - closed
   workflow_dispatch:
-    inputs:
-      release-version:
-        description: "Release version (for example, 1.0.1)"
-        required: true
 
 permissions:
   contents: write
@@ -20,33 +16,26 @@ jobs:
     runs-on: ubuntu-latest
 
     if: |
-      '
-        (
-          github.event.pull_request.base.ref == "main" &&
-          github.event_name == "pull_request" &&
-          github.event.pull_request.merged == true
-        ) ||
-        github.event_name == "workflow_dispatch"
-      '
+      (
+        github.event.pull_request.base.ref == "main" &&
+        github.event_name == "pull_request" &&
+        github.event.pull_request.merged == true
+      ) ||
+      github.event_name == "workflow_dispatch"
 
     steps:
       - name: 1. Check out the main branch.
         uses: actions/checkout@v4
         with:
-          ref: main
           fetch-depth: 0
 
       - name: 2. Set the release version.
         id: set-release-version
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]
+          RELEASE_VERSION=$(node -p "require('./package.json').version")
+          if [ -z "$RELEASE_VERSION" ]
           then
-            RELEASE_VERSION=$(cat VERSION)
-          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]
-          then
-            RELEASE_VERSION=${{ github.event.inputs.release-version }}
-          else
-            echo "Error: The workflow doesn’t support your event type."
+            echo "::error::package.json is missing the version field."
             exit 1
           fi
           echo "release-version=${RELEASE_VERSION}" >> $GITHUB_OUTPUT

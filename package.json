@@ -1,0 +1,16 @@
+{
+  "name": "christian-vale",
+  "version": "0.3.0",
+  "description": "A Vale package that reflects Christian’s style. 😎",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/christianareas-postman/christian-vale.git"
+  },
+  "author": "Christian Areas",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/christianareas-postman/christian-vale/issues"
+  },
+  "homepage": "https://github.com/christianareas-postman/christian-vale#readme"
+}
