@@ -54,7 +54,7 @@ jobs:
       - name: 3. Prepare the package.
         run: |
           mkdir -p release/christian-vale
-          cp -R styles release/christian-vale/
+          cp -R src/styles release/christian-vale/
 
       - name: 4. Zip the package.
         working-directory: release
