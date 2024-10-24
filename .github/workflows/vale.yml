@@ -1,4 +1,4 @@
-name: Run Vale.
+name: Run Vale
 
 on: pull_request
 
